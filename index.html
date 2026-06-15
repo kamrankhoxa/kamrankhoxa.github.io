@@ -351,13 +351,46 @@
       font-size: 0.82rem;
       color: var(--text-soft);
       text-align: left;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.65rem;
     }
 
-    .project a {
-      font-size: 0.8rem;
-      font-weight: 600;
+    .project-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.45rem;
+      margin-top: 0.25rem;
     }
+
+    .btn {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn:hover { text-decoration: none; transform: translateY(-1px); }
+
+    .btn-live {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .btn-live:hover { color: #fff; opacity: 0.9; }
+
+    .btn-code {
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--navy);
+      border: 1px solid rgba(30, 58, 95, 0.2);
+    }
+
+    .btn-code:hover { color: var(--accent); }
+
+    .job-title a { color: var(--navy); text-decoration: none; }
+    .job-title a:hover { color: var(--accent); text-decoration: underline; }
 
     /* Tech chips */
     .chips {
@@ -394,6 +427,14 @@
       border: 1px solid rgba(255, 255, 255, 0.65);
       padding: 0.35rem 0.75rem;
       border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .cert:hover {
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--accent);
+      text-decoration: none;
     }
 
     /* Footer */
@@ -491,7 +532,7 @@
 
       <article class="job glass">
         <div class="job-head">
-          <span class="job-title">Associate Team Lead · Codebotx</span>
+          <span class="job-title">Associate Team Lead · <a href="https://codebotx.com/" target="_blank" rel="noopener noreferrer">Codebotx</a></span>
           <span class="job-meta">D.G. Khan, PK · Nov 2025 – Present</span>
         </div>
         <ul>
@@ -502,7 +543,7 @@
 
       <article class="job glass">
         <div class="job-head">
-          <span class="job-title">Associate Team Lead · Tech Solutions Pro</span>
+          <span class="job-title">Associate Team Lead · <a href="https://techsolutionspro.co.uk/" target="_blank" rel="noopener noreferrer">Tech Solutions Pro</a></span>
           <span class="job-meta">Islamabad, PK · Apr 2025 – Nov 2025</span>
         </div>
         <ul>
@@ -513,7 +554,7 @@
 
       <article class="job glass">
         <div class="job-head">
-          <span class="job-title">Associate Software Engineer · BloomRix</span>
+          <span class="job-title">Associate Software Engineer · <a href="http://www.bloomrix.com/" target="_blank" rel="noopener noreferrer">BloomRix</a></span>
           <span class="job-meta">Lahore, PK · Aug 2024 – Apr 2025</span>
         </div>
         <ul>
@@ -524,7 +565,7 @@
 
       <article class="job glass">
         <div class="job-head">
-          <span class="job-title">Associate Software Engineer · SA Communications</span>
+          <span class="job-title">Associate Software Engineer · <a href="https://www.linkedin.com/company/98633674/" target="_blank" rel="noopener noreferrer">SA Communications</a></span>
           <span class="job-meta">Okara, PK · Dec 2023 – Aug 2024</span>
         </div>
         <ul>
@@ -535,7 +576,7 @@
 
       <article class="job glass">
         <div class="job-head">
-          <span class="job-title">Associate Software Engineer · eFAIDA Technologies</span>
+          <span class="job-title">Associate Software Engineer · <a href="https://efaida.com/" target="_blank" rel="noopener noreferrer">eFAIDA Technologies</a></span>
           <span class="job-meta">Okara, PK · Apr 2023 – Dec 2023</span>
         </div>
         <ul>
@@ -553,63 +594,162 @@
           <h3>Samplethis</h3>
           <p class="stack">Next.js · Subscription &amp; Listing</p>
           <p>Digital music platform with premium sample packs, VST3 plugin marketplace, licensing &amp; user dashboards.</p>
-          <a href="https://github.com/kamrankhoxa/smplethis" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/smplethis</a>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://samplethis.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/smplethis" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
         </article>
 
         <article class="project glass">
           <h3>WayveUK</h3>
           <p class="stack">Next.js · Rental Marketplace</p>
           <p>Student marketplace to rent, buy &amp; sell — payments, delivery, EasyShipping &amp; student-exclusive offers.</p>
-          <a href="https://github.com/kamrankhoxa/wayveuk" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/wayveuk</a>
-        </article>
-
-        <article class="project glass">
-          <h3>Maelano Phase-01</h3>
-          <p class="stack">MERN · Microservices</p>
-          <p>Amazon-style e-commerce with Dockerized microservices on AWS ALB — 60% less manual workload via async messaging.</p>
-          <a href="https://github.com/kamrankhoxa/maelano" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/maelano</a>
-        </article>
-
-        <article class="project glass">
-          <h3>Laboratory AI-Driven</h3>
-          <p class="stack">Laravel · AI Reports</p>
-          <p>Multi-tenant lab management with SSO, AI-based diagnostics &amp; automated report generation.</p>
-          <a href="https://github.com/kamrankhoxa/labioneer" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/labioneer</a>
-        </article>
-
-        <article class="project glass">
-          <h3>WorkzenPro</h3>
-          <p class="stack">Next.js &amp; Laravel · HRM</p>
-          <p>SaaS suite — org creation, domain setup, tenant routing &amp; unified login systems.</p>
-          <a href="https://github.com/kamrankhoxa/workzen" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/workzen</a>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://wayveuk.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/wayveuk" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
         </article>
 
         <article class="project glass">
           <h3>Eztoolx</h3>
           <p class="stack">Next.js · Multi-tool Platform</p>
           <p>Video downloading, media utilities &amp; productivity tools in one unified interface.</p>
-          <a href="https://github.com/kamrankhoxa/eztoolx" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/eztoolx</a>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://eztoolx.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/eztoolx" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
         </article>
 
         <article class="project glass">
-          <h3>Escrow Commerce</h3>
-          <p class="stack">Laravel · Crypto Pay</p>
-          <p>Crypto e-commerce with escrow payments, multi-currency via Coinbase/BitPay &amp; encrypted wallets.</p>
-          <a href="https://github.com/kamrankhoxa/conceptbig" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/conceptbig</a>
+          <h3>Maelano Phase-01</h3>
+          <p class="stack">MERN · Microservices</p>
+          <p>Amazon-style e-commerce with Dockerized microservices on AWS ALB — 60% less manual workload.</p>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://maelano.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/maelano" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Laboratory AI-Driven</h3>
+          <p class="stack">Laravel · AI Reports</p>
+          <p>Multi-tenant lab management with SSO, AI-based diagnostics &amp; automated report generation.</p>
+          <div class="project-actions">
+            <a class="btn btn-live" href="http://pioneercdxlabs.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/labioneer" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>WorkzenPro</h3>
+          <p class="stack">Next.js &amp; Laravel · HRM</p>
+          <p>SaaS suite — org creation, domain setup, tenant routing &amp; unified login systems.</p>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://workzenpro.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/workzen" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Vehicle Marketplace</h3>
+          <p class="stack">Node.js · Listing &amp; Features</p>
+          <p>Vehicle listings, dealer profiles, messaging, filters &amp; role-specific booking workflows.</p>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://mippim.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/m-motors" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Bed Store</h3>
+          <p class="stack">WordPress · Bricks &amp; WooCommerce</p>
+          <p>Custom themes &amp; plugins with Bricks Builder — conditional pricing &amp; dynamic product selection.</p>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://mellbour.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/bedstore" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Cab Booking Platform</h3>
+          <p class="stack">WordPress · Elementor &amp; WooCommerce</p>
+          <p>Taxi booking plugin with per-km/per-hour rates, real-time fare calculation &amp; booking tracking.</p>
+          <div class="project-actions">
+            <a class="btn btn-live" href="https://pdxairportshuttle.com/" target="_blank" rel="noopener noreferrer">View Project</a>
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/kwickcab" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Quran Search Application</h3>
+          <p class="stack">Django · Voice Recognition</p>
+          <p>Search Quranic verses by voice, audio upload, or Arabic text input.</p>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/Quran-Verse-Search" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
         </article>
 
         <article class="project glass">
           <h3>DeFi LaunchPad</h3>
           <p class="stack">T3 · NextUI &amp; ShyftRPC</p>
           <p>Token launch with presale logic, tax mechanisms &amp; escrow-like fund security.</p>
-          <a href="https://github.com/kamrankhoxa/dex-app" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/dex-app</a>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/dex-app" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Escrow Commerce</h3>
+          <p class="stack">Laravel · Crypto Pay</p>
+          <p>Crypto e-commerce with escrow payments, multi-currency via Coinbase/BitPay &amp; encrypted wallets.</p>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/conceptbig" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Central</h3>
+          <p class="stack">Laravel · SaaS Bootstrap</p>
+          <p>Org creation, domain setup, super admin allocation &amp; domain-based tenant routing.</p>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/central" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>Core</h3>
+          <p class="stack">Laravel · Tenant Management</p>
+          <p>Tenant data management, subscriptions &amp; permission-based module controls.</p>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/core" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>XYZ Hosting</h3>
+          <p class="stack">Laravel · Domains &amp; VPS</p>
+          <p>Hosting panel for domain search, purchase, shared hosting &amp; VPS with GoDaddy API integration.</p>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/xyzhost" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
         </article>
 
         <article class="project glass">
           <h3>Gaming Zone Manager</h3>
           <p class="stack">React Native · Sessions</p>
           <p>Gaming session billing, live status sync &amp; JWT-based roles with real-time tracking.</p>
-          <a href="https://github.com/kamrankhoxa/gzm-app" target="_blank" rel="noopener noreferrer">github.com/kamrankhoxa/gzm-app</a>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/gzm-app" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
+        </article>
+
+        <article class="project glass">
+          <h3>SportCaster</h3>
+          <p class="stack">React Native · News &amp; Highlights</p>
+          <p>Live sports headlines, match breakdowns &amp; category-based highlights with admin tools.</p>
+          <div class="project-actions">
+            <a class="btn btn-code" href="https://github.com/kamrankhoxa/sportcaster" target="_blank" rel="noopener noreferrer">View Code</a>
+          </div>
         </article>
 
       </div>
@@ -630,16 +770,16 @@
 
       <h2 class="section-title" style="margin-top:1.5rem">Certifications</h2>
       <div class="certs glass">
-        <span class="cert">React JS Hands-On</span>
-        <span class="cert">Next.js Hands-On</span>
-        <span class="cert">Next.js 13 Hands-On</span>
-        <span class="cert">Gatsby JS</span>
-        <span class="cert">Docker Hands-On Advanced</span>
-        <span class="cert">Mastering AWS Serverless</span>
-        <span class="cert">Crystal Agile</span>
-        <span class="cert">Figma to WordPress</span>
-        <span class="cert">NEAR Blockchain JavaScript</span>
-        <span class="cert">Bootstrap &amp; jQuery</span>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-8867f374-749e-4f22-a921-b02a9ab4dc39/" target="_blank" rel="noopener noreferrer">React JS Hands-On</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-705a07ac-7d7b-47b7-bbaf-6f35ae327d5f/" target="_blank" rel="noopener noreferrer">Next.js Hands-On</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-39e42ecd-0770-49fe-9cf5-7b34b0e5d2dd/" target="_blank" rel="noopener noreferrer">Next.js 13 Hands-On</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-441d4f14-49b4-4bab-9e9a-98a1b1b23d9d/" target="_blank" rel="noopener noreferrer">Gatsby JS</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-964c40fa-54e1-478e-9c5d-a22c6c15db5c/" target="_blank" rel="noopener noreferrer">Figma to WordPress</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-dbe71268-85b3-426e-b9fd-a462e54884fe/" target="_blank" rel="noopener noreferrer">NEAR Blockchain JavaScript</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-f5fe64f7-f834-4be9-b5e2-011077855f65/" target="_blank" rel="noopener noreferrer">Bootstrap &amp; jQuery</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-2e87f3fe-fe6f-4647-bc1d-a85b4ddb7b2f/" target="_blank" rel="noopener noreferrer">Crystal Agile</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-e75e1aa4-22d6-4923-ac04-a60c45ad21b4/" target="_blank" rel="noopener noreferrer">Docker Hands-On Advanced</a>
+        <a class="cert" href="https://www.udemy.com/certificate/UC-5db478a2-55b4-49de-a8c7-fa2ce09c9e77/" target="_blank" rel="noopener noreferrer">Mastering AWS Serverless</a>
       </div>
     </section>
 
