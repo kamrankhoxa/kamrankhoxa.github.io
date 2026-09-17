@@ -7,19 +7,19 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://kamrankhoxa.github.io/dp.png</image:loc>
+      <image:loc>https://kamrankhoxa.github.io/assets/images/profile.png</image:loc>
       <image:title>Kamran Fareed — Software Engineer and Full Stack Developer</image:title>
       <image:caption>Professional headshot of Kamran Fareed (@KamranKhoxa)</image:caption>
     </image:image>
   </url>
   <url>
-    <loc>https://kamrankhoxa.github.io/Kamran_Fareed_Resume.pdf</loc>
+    <loc>https://kamrankhoxa.github.io/assets/docs/Kamran_Fareed_Resume.pdf</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://kamrankhoxa.github.io/Kamran_Fareed_Research_Resume.pdf</loc>
+    <loc>https://kamrankhoxa.github.io/assets/docs/Kamran_Fareed_Research_Resume.pdf</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
