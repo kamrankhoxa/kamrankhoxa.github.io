@@ -1,12 +1,18 @@
 /**
- * main.js — Scroll engine: hero parallax + section track animations
- * Depends on window.PORTFOLIO from data.js
+ * main.js — 3D parallax engine
+ * Specs:
+ *  - Layers: bg 0.2x · mid 0.5x · fg 1.0x
+ *  - Mouse tilt: perspective(1000px) rotateX/Y, lerp 0.1
+ *  - GSAP ScrollTrigger scrub: true (bidirectional)
+ *  - Mobile/touch: no listeners, static layout (html.is-static)
  */
 (function () {
   "use strict";
 
-  const data = window.PORTFOLIO || {};
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var data = window.PORTFOLIO || {};
+  var LERP = 0.1;
+  var MAX_TILT = 12;
+  var PERSPECTIVE = 1000;
 
   function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -14,44 +20,32 @@
   function $$(sel, root) {
     return Array.from((root || document).querySelectorAll(sel));
   }
-  function el(tag, className, html) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (html != null) node.innerHTML = html;
-    return node;
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
   }
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
+  function clamp(n, a, b) {
+    return Math.max(a, Math.min(b, n));
   }
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
-  function isMobile() {
-    return window.innerWidth <= 768;
+
+  function isStaticMode() {
+    return document.documentElement.classList.contains("is-static");
   }
 
-  /* ══════════════════════════════════════
-     Content renderers
-     ══════════════════════════════════════ */
-  function renderFloatTags() {
-    const layer = $("[data-float-tags]");
-    if (!layer || !data.floatTags) return;
-    data.floatTags.forEach(function (tag) {
-      const node = el("span", "float-tag", tag.label);
-      node.style.left = tag.x + "%";
-      node.style.top = tag.y + "%";
-      node.dataset.depth = String(tag.depth || 1);
-      layer.appendChild(node);
-    });
-  }
-
+  /* ── Content renderers ── */
   function renderSkills() {
-    const grid = $("[data-skills-grid]");
+    var grid = $("[data-skills-grid]");
     if (!grid || !data.skills) return;
     data.skills.forEach(function (cat) {
-      const card = el("article", "skill-card glass track-item");
+      var card = el("article", "skill-card glass");
+      card.setAttribute("data-scroll-anim", "card");
       card.innerHTML =
-        "<h3>" +
+        '<div class="tilt-inner" data-tilt><h3>' +
         cat.title +
         "</h3><ul>" +
         cat.items
@@ -59,16 +53,17 @@
             return "<li>" + i + "</li>";
           })
           .join("") +
-        "</ul>";
+        "</ul></div>";
       grid.appendChild(card);
     });
   }
 
   function renderProjects() {
-    const wrap = $("[data-projects]");
+    var wrap = $("[data-projects]");
     if (!wrap || !data.projects) return;
     data.projects.forEach(function (p) {
-      const card = el("article", "project-card glass track-item");
+      var card = el("article", "project-card glass");
+      card.setAttribute("data-scroll-anim", "card");
       var actions = "";
       if (p.live) {
         actions +=
@@ -83,7 +78,7 @@
           '" target="_blank" rel="noopener noreferrer">Code</a>';
       }
       card.innerHTML =
-        '<p class="stack">' +
+        '<div class="tilt-inner" data-tilt><p class="stack">' +
         p.stack +
         "</p><h3>" +
         p.name +
@@ -91,18 +86,19 @@
         p.desc +
         '</p><div class="project-actions">' +
         actions +
-        "</div>";
+        "</div></div>";
       wrap.appendChild(card);
     });
   }
 
   function renderExperience() {
-    const wrap = $("[data-experience]");
+    var wrap = $("[data-experience]");
     if (!wrap || !data.experience) return;
     data.experience.forEach(function (job) {
-      const card = el("article", "job-card glass track-item");
+      var card = el("article", "job-card glass");
+      card.setAttribute("data-scroll-anim", "card");
       card.innerHTML =
-        '<div class="job-head"><span class="job-title">' +
+        '<div class="tilt-inner" data-tilt><div class="job-head"><span class="job-title">' +
         job.role +
         ' · <a href="' +
         job.url +
@@ -116,213 +112,313 @@
             return "<li>" + b + "</li>";
           })
           .join("") +
-        "</ul>";
+        "</ul></div>";
       wrap.appendChild(card);
     });
   }
 
   function renderResearch() {
-    const wrap = $("[data-research]");
+    var wrap = $("[data-research]");
     if (!wrap || !data.research) return;
     data.research.forEach(function (item) {
-      const card = el("article", "research-card glass track-item");
-      card.innerHTML = "<h3>" + item.title + "</h3><p>" + item.body + "</p>";
+      var card = el("article", "research-card glass");
+      card.setAttribute("data-scroll-anim", "card");
+      card.innerHTML =
+        '<div class="tilt-inner" data-tilt><h3>' +
+        item.title +
+        "</h3><p>" +
+        item.body +
+        "</p></div>";
       wrap.appendChild(card);
     });
   }
 
-  /* ══════════════════════════════════════
-     Typewriter
-     ══════════════════════════════════════ */
   function initTypewriter() {
-    const target = $("[data-typewriter]");
+    var target = $("[data-typewriter]");
     if (!target) return;
-    const full = data.typewriterText || target.textContent.trim();
-    if (reduceMotion) {
+    var full = data.typewriterText || target.textContent.trim();
+    if (isStaticMode()) {
       target.textContent = full;
       return;
     }
     target.textContent = "";
-    let i = 0;
-    function tick() {
+    var i = 0;
+    (function tick() {
       if (i <= full.length) {
         target.textContent = full.slice(0, i);
         i += 1;
-        window.setTimeout(tick, 36);
+        window.setTimeout(tick, 34);
       }
-    }
-    window.setTimeout(tick, 350);
+    })();
   }
 
-  /* ══════════════════════════════════════
-     Hero parallax — scrollY driven, no sticky dependency
-     bg 0.15x · mid 0.35x · fg 1.0x
-     ══════════════════════════════════════ */
-  function initParallax() {
-    const hero = $(".hero");
-    const runway = $(".hero-runway");
-    const layers = $$(".parallax-layer[data-speed]");
-    const floatTags = $$(".float-tag");
-    if (!hero || !layers.length) return;
+  /* ══════════════════════════════════════════
+     Mouse-tracking 3D tilt
+     perspective(1000px) · lerp 0.1 · will-change
+     ══════════════════════════════════════════ */
+  function initMouseTilt() {
+    if (isStaticMode()) return;
 
-    let current = { bg: 0, mid: 0, fg: 0 };
-    let target = { bg: 0, mid: 0, fg: 0 };
-    const ease = 0.14;
+    var nodes = $$("[data-tilt]");
+    if (!nodes.length) return;
 
-    function measure() {
-      if (reduceMotion || isMobile()) {
-        target.bg = target.mid = target.fg = 0;
-        return;
-      }
+    var states = nodes.map(function (node) {
+      return {
+        el: node,
+        tx: 0,
+        ty: 0,
+        cx: 0,
+        cy: 0,
+      };
+    });
 
-      // Use raw page scroll while hero is on screen
-      const y = window.scrollY || window.pageYOffset || 0;
-      const heroBottom = runway
-        ? runway.offsetTop + runway.offsetHeight
-        : hero.offsetTop + hero.offsetHeight;
+    var mx = 0.5;
+    var my = 0.5;
+    var running = true;
 
-      // Only drive while user is still in/near hero zone
-      const activeY = clamp(y, 0, Math.max(heroBottom, window.innerHeight * 2));
-
-      target.bg = activeY * 0.15;
-      target.mid = activeY * 0.35;
-      target.fg = activeY * 1.0;
+    function onMove(e) {
+      mx = e.clientX / window.innerWidth;
+      my = e.clientY / window.innerHeight;
+      states.forEach(function (s) {
+        var rect = s.el.getBoundingClientRect();
+        var lx = (e.clientX - rect.left) / Math.max(rect.width, 1);
+        var ly = (e.clientY - rect.top) / Math.max(rect.height, 1);
+        // Prefer local card vector when cursor is near the element
+        var inView =
+          e.clientX >= rect.left - 80 &&
+          e.clientX <= rect.right + 80 &&
+          e.clientY >= rect.top - 80 &&
+          e.clientY <= rect.bottom + 80;
+        if (inView) {
+          s.tx = clamp((0.5 - ly) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
+          s.ty = clamp((lx - 0.5) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
+        } else {
+          s.tx = clamp((0.5 - my) * 8, -6, 6);
+          s.ty = clamp((mx - 0.5) * 8, -6, 6);
+        }
+      });
     }
 
-    function paint() {
-      current.bg = lerp(current.bg, target.bg, ease);
-      current.mid = lerp(current.mid, target.mid, ease);
-      current.fg = lerp(current.fg, target.fg, ease);
-
-      layers.forEach(function (layer) {
-        const speed = parseFloat(layer.dataset.speed || "1");
-        var y = 0;
-        if (speed <= 0.2) y = current.bg;
-        else if (speed <= 0.5) y = current.mid;
-        else y = current.fg;
-
-        // Move opposite to scroll = classic depth (layer lags / rises)
-        layer.style.transform = "translate3d(0, " + (-y).toFixed(2) + "px, 0)";
-      });
-
-      floatTags.forEach(function (tag) {
-        const depth = parseFloat(tag.dataset.depth || "1");
-        const extra = current.mid * (depth - 1) * 0.45;
-        tag.style.transform = "translate3d(0, " + (-extra).toFixed(2) + "px, 0)";
+    function onLeave() {
+      states.forEach(function (s) {
+        s.tx = 0;
+        s.ty = 0;
       });
     }
 
     function frame() {
-      measure();
-      paint();
+      if (!running) return;
+      states.forEach(function (s) {
+        s.cx = lerp(s.cx, s.tx, LERP);
+        s.cy = lerp(s.cy, s.ty, LERP);
+        s.el.style.transform =
+          "perspective(" +
+          PERSPECTIVE +
+          "px) rotateX(" +
+          s.cx.toFixed(3) +
+          "deg) rotateY(" +
+          s.cy.toFixed(3) +
+          "deg)";
+      });
       window.requestAnimationFrame(frame);
     }
 
-    window.addEventListener(
-      "scroll",
-      function () {
-        measure();
-      },
-      { passive: true }
-    );
-    window.addEventListener("resize", measure, { passive: true });
-    measure();
+    window.addEventListener("mousemove", onMove, { passive: true });
+    document.addEventListener("mouseleave", onLeave, { passive: true });
     window.requestAnimationFrame(frame);
-  }
 
-  /* ══════════════════════════════════════
-     Section scroll-track — top → bottom
-     Progress 0→1 as each section crosses the viewport
-     ══════════════════════════════════════ */
-  function sectionProgress(section) {
-    const rect = section.getBoundingClientRect();
-    const vh = window.innerHeight || 1;
-    // Start when top hits bottom of viewport; end when top hits ~20% from top
-    const start = vh * 0.92;
-    const end = vh * 0.18;
-    const raw = (start - rect.top) / (start - end);
-    return clamp(raw, 0, 1);
-  }
-
-  function initScrollTracks() {
-    const sections = $$("[data-scroll-track]");
-    if (!sections.length) return;
-
-    // Stagger children
-    sections.forEach(function (section) {
-      const items = $$(".track-item", section);
-      items.forEach(function (item, i) {
-        item.style.setProperty("--i", String(i));
-      });
+    document.addEventListener("visibilitychange", function () {
+      running = !document.hidden;
+      if (running) window.requestAnimationFrame(frame);
     });
+  }
 
-    if (reduceMotion) {
-      sections.forEach(function (section) {
-        section.style.setProperty("--scroll-progress", "1");
-        section.classList.add("is-inview");
-        $$(".track-item", section).forEach(function (item) {
-          item.style.setProperty("--item-progress", "1");
-        });
-      });
+  /* ══════════════════════════════════════════
+     GSAP ScrollTrigger · scrub: true
+     Layer velocities 0.2 / 0.5 / 1.0
+     Spatial: scale · rotate · opacity
+     ══════════════════════════════════════════ */
+  function initScrollParallax() {
+    if (isStaticMode()) return;
+    if (typeof window.gsap === "undefined" || typeof window.ScrollTrigger === "undefined") {
       return;
     }
 
-    let ticking = false;
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
 
-    function update() {
-      ticking = false;
-      const vh = window.innerHeight || 1;
+    var runway = $("[data-parallax-runway]");
+    var layerBg = $(".layer-bg");
+    var layerMid = $(".layer-mid");
+    var layerFg = $(".layer-fg");
+    var midAsset = $(".mid-asset");
+    var heroCard = $(".hero-card");
 
-      sections.forEach(function (section) {
-        const p = sectionProgress(section);
-        section.style.setProperty("--scroll-progress", p.toFixed(4));
-        section.classList.toggle("is-inview", p > 0.02);
+    if (runway) {
+      // Master scrubbed timeline — plays forward & backward with scroll
+      var tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: runway,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true, // exact scrub binding
+        },
+      });
 
-        // Children animate top→bottom with staggered progress
-        const items = $$(".track-item", section);
-        items.forEach(function (item, i) {
-          const delay = Math.min(0.55, i * 0.07);
-          const ip = clamp((p - delay) / Math.max(0.001, 1 - delay), 0, 1);
-          item.style.setProperty("--item-progress", ip.toFixed(4));
-        });
+      // Background @ 0.2x relative travel
+      if (layerBg) {
+        tl.fromTo(
+          layerBg,
+          { yPercent: 0 },
+          { yPercent: -20, ease: "none" }, // 0.2 of 100
+          0
+        );
+      }
 
-        // Optional: parallax nudge on section background accent
-        const shift = (1 - p) * 40;
-        section.style.setProperty("--track-shift", shift.toFixed(2) + "px");
+      // Midground @ 0.5x + scale / rotate
+      if (layerMid) {
+        tl.fromTo(
+          layerMid,
+          { yPercent: 0 },
+          { yPercent: -50, ease: "none" },
+          0
+        );
+      }
+      if (midAsset) {
+        tl.fromTo(
+          midAsset,
+          { scale: 0.88, rotateY: -8, opacity: 0.35 },
+          { scale: 1.18, rotateY: 12, opacity: 0.7, ease: "none" },
+          0
+        );
+      }
+
+      // Foreground @ 1.0x
+      if (layerFg) {
+        tl.fromTo(
+          layerFg,
+          { yPercent: 0 },
+          { yPercent: -100, ease: "none" },
+          0
+        );
+      }
+      if (heroCard) {
+        tl.fromTo(
+          heroCard,
+          { scale: 1, rotateX: 0, opacity: 1 },
+          { scale: 0.92, rotateX: 8, opacity: 0.25, ease: "none" },
+          0
+        );
+      }
+
+      // Floating fg chips
+      $$(".fg-float").forEach(function (chip, i) {
+        tl.fromTo(
+          chip,
+          { y: 0, rotateZ: 0, opacity: 0.9 },
+          {
+            y: -120 - i * 40,
+            rotateZ: (i % 2 === 0 ? 1 : -1) * 18,
+            opacity: 0.15,
+            ease: "none",
+          },
+          0
+        );
       });
     }
 
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        window.requestAnimationFrame(update);
-      }
-    }
+    // Section layer velocities + card reveals (scrubbed)
+    $$("[data-stack-section]").forEach(function (section) {
+      var bg = section.querySelector(".section-bg");
+      var mid = section.querySelector(".section-mid");
+      var fg = section.querySelector(".section-fg");
+      var cards = section.querySelectorAll('[data-scroll-anim="card"], [data-scroll-anim="fade-up"]');
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    update();
+      if (bg) {
+        gsap.fromTo(
+          bg,
+          { yPercent: -8 },
+          {
+            yPercent: 8,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          }
+        );
+      }
+
+      if (mid) {
+        gsap.fromTo(
+          mid,
+          { y: 40 },
+          {
+            y: -20,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 1,
+            },
+          }
+        );
+      }
+
+      if (fg) {
+        gsap.fromTo(
+          fg,
+          { yPercent: 10 },
+          {
+            yPercent: -25,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          }
+        );
+      }
+
+      cards.forEach(function (card) {
+        gsap.fromTo(
+          card,
+          { opacity: 0.15, y: 48, rotateX: 10, scale: 0.96 },
+          {
+            opacity: 1,
+            y: 0,
+            rotateX: 0,
+            scale: 1,
+            ease: "none",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 92%",
+              end: "top 45%",
+              scrub: true,
+            },
+          }
+        );
+      });
+    });
   }
 
-  /* ══════════════════════════════════════
-     Nav
-     ══════════════════════════════════════ */
   function initNav() {
-    const nav = $("#site-nav");
-    const toggle = $("[data-nav-toggle]");
-    const links = $(".nav-links");
-
+    var nav = $("#site-nav");
+    var toggle = $("[data-nav-toggle]");
+    var links = $(".nav-links");
     function onScroll() {
-      if (!nav) return;
-      nav.classList.toggle("is-scrolled", window.scrollY > 24);
+      if (nav) nav.classList.toggle("is-scrolled", window.scrollY > 24);
     }
-
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
-
     if (toggle && links) {
       toggle.addEventListener("click", function () {
-        const open = toggle.getAttribute("aria-expanded") === "true";
+        var open = toggle.getAttribute("aria-expanded") === "true";
         toggle.setAttribute("aria-expanded", String(!open));
         links.classList.toggle("is-open", !open);
       });
@@ -336,21 +432,41 @@
   }
 
   function setYear() {
-    const node = $("[data-year]");
+    var node = $("[data-year]");
     if (node) node.textContent = String(new Date().getFullYear());
   }
 
+  function waitForGsap(cb) {
+    if (typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined") {
+      cb();
+      return;
+    }
+    var tries = 0;
+    var id = window.setInterval(function () {
+      tries += 1;
+      if (typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined") {
+        window.clearInterval(id);
+        cb();
+      } else if (tries > 50) {
+        window.clearInterval(id);
+      }
+    }, 40);
+  }
+
   function init() {
-    renderFloatTags();
     renderSkills();
     renderProjects();
     renderExperience();
     renderResearch();
     initTypewriter();
-    initParallax();
-    initScrollTracks();
     initNav();
     setYear();
+
+    // Enhanced desktop only — strip tracking on static/mobile
+    if (!isStaticMode()) {
+      initMouseTilt();
+      waitForGsap(initScrollParallax);
+    }
   }
 
   if (document.readyState === "loading") {
