@@ -99,12 +99,12 @@
 
   <link rel="stylesheet" href="/css/styles.css" />
 
-  <!-- Early device class: static on touch / narrow / reduced-motion -->
+  <!-- Enhanced unless clearly mobile/reduced-motion (don't kill desktop touch laptops) -->
   <script>
     (function () {
-      var mq = window.matchMedia("(max-width: 768px), (hover: none) and (pointer: coarse), (prefers-reduced-motion: reduce)");
-      var touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-      document.documentElement.classList.add(mq.matches || (touch && window.innerWidth <= 900) ? "is-static" : "is-enhanced");
+      var narrow = window.matchMedia("(max-width: 768px)").matches;
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.documentElement.classList.add(narrow || reduce ? "is-static" : "is-enhanced");
     })();
   </script>
 </head>

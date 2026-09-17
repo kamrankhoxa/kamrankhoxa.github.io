@@ -1,10 +1,9 @@
 /**
- * main.js — 3D parallax engine
- * Specs:
- *  - Layers: bg 0.2x · mid 0.5x · fg 1.0x
- *  - Mouse tilt: perspective(1000px) rotateX/Y, lerp 0.1
- *  - GSAP ScrollTrigger scrub: true (bidirectional)
- *  - Mobile/touch: no listeners, static layout (html.is-static)
+ * main.js — Parallax + tilt + content
+ * Layers: bg 0.2x · mid 0.5x · fg 1.0x
+ * Mouse tilt: perspective(1000px), lerp 0.1
+ * Scroll: GSAP ScrollTrigger scrub when available, else native rAF
+ * Static only on ≤768px / reduced-motion
  */
 (function () {
   "use strict";
@@ -32,12 +31,11 @@
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
-
   function isStaticMode() {
     return document.documentElement.classList.contains("is-static");
   }
 
-  /* ── Content renderers ── */
+  /* ── Renderers ── */
   function renderSkills() {
     var grid = $("[data-skills-grid]");
     if (!grid || !data.skills) return;
@@ -145,57 +143,40 @@
     var i = 0;
     (function tick() {
       if (i <= full.length) {
-        target.textContent = full.slice(0, i);
-        i += 1;
+        target.textContent = full.slice(0, i++);
         window.setTimeout(tick, 34);
       }
     })();
   }
 
-  /* ══════════════════════════════════════════
-     Mouse-tracking 3D tilt
-     perspective(1000px) · lerp 0.1 · will-change
-     ══════════════════════════════════════════ */
+  /* ── Mouse tilt · lerp 0.1 · perspective 1000 ── */
   function initMouseTilt() {
     if (isStaticMode()) return;
-
     var nodes = $$("[data-tilt]");
     if (!nodes.length) return;
 
     var states = nodes.map(function (node) {
-      return {
-        el: node,
-        tx: 0,
-        ty: 0,
-        cx: 0,
-        cy: 0,
-      };
+      return { el: node, tx: 0, ty: 0, cx: 0, cy: 0 };
     });
-
-    var mx = 0.5;
-    var my = 0.5;
     var running = true;
 
     function onMove(e) {
-      mx = e.clientX / window.innerWidth;
-      my = e.clientY / window.innerHeight;
       states.forEach(function (s) {
         var rect = s.el.getBoundingClientRect();
+        var near =
+          e.clientX >= rect.left - 100 &&
+          e.clientX <= rect.right + 100 &&
+          e.clientY >= rect.top - 100 &&
+          e.clientY <= rect.bottom + 100;
+        if (!near) {
+          s.tx = 0;
+          s.ty = 0;
+          return;
+        }
         var lx = (e.clientX - rect.left) / Math.max(rect.width, 1);
         var ly = (e.clientY - rect.top) / Math.max(rect.height, 1);
-        // Prefer local card vector when cursor is near the element
-        var inView =
-          e.clientX >= rect.left - 80 &&
-          e.clientX <= rect.right + 80 &&
-          e.clientY >= rect.top - 80 &&
-          e.clientY <= rect.bottom + 80;
-        if (inView) {
-          s.tx = clamp((0.5 - ly) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
-          s.ty = clamp((lx - 0.5) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
-        } else {
-          s.tx = clamp((0.5 - my) * 8, -6, 6);
-          s.ty = clamp((mx - 0.5) * 8, -6, 6);
-        }
+        s.tx = clamp((0.5 - ly) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
+        s.ty = clamp((lx - 0.5) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
       });
     }
 
@@ -218,7 +199,7 @@
           s.cx.toFixed(3) +
           "deg) rotateY(" +
           s.cy.toFixed(3) +
-          "deg)";
+          "deg) translateZ(8px)";
       });
       window.requestAnimationFrame(frame);
     }
@@ -226,184 +207,139 @@
     window.addEventListener("mousemove", onMove, { passive: true });
     document.addEventListener("mouseleave", onLeave, { passive: true });
     window.requestAnimationFrame(frame);
-
     document.addEventListener("visibilitychange", function () {
       running = !document.hidden;
       if (running) window.requestAnimationFrame(frame);
     });
   }
 
-  /* ══════════════════════════════════════════
-     GSAP ScrollTrigger · scrub: true
-     Layer velocities 0.2 / 0.5 / 1.0
-     Spatial: scale · rotate · opacity
-     ══════════════════════════════════════════ */
-  function initScrollParallax() {
+  /* ── Native layer parallax (always works) ── */
+  function initNativeParallax() {
+    if (isStaticMode()) return;
+
+    var runway = $("[data-parallax-runway]");
+    var bg = $(".layer-bg");
+    var mid = $(".layer-mid");
+    var midAsset = $(".mid-asset");
+    var fg = $(".layer-fg");
+    var heroCard = $(".hero-card");
+    if (!runway) return;
+
+    var cur = { bg: 0, mid: 0, fg: 0, scale: 1, opacity: 1 };
+    var tgt = { bg: 0, mid: 0, fg: 0, scale: 1, opacity: 1 };
+
+    function progress() {
+      var rect = runway.getBoundingClientRect();
+      var total = Math.max(1, runway.offsetHeight - window.innerHeight);
+      return clamp(-rect.top / total, 0, 1);
+    }
+
+    function measure() {
+      var p = progress();
+      // Velocities 0.2 / 0.5 / 1.0 as travel fractions of 160px base
+      var travel = 160;
+      tgt.bg = -p * travel * 0.2;
+      tgt.mid = -p * travel * 0.5;
+      tgt.fg = -p * travel * 1.0;
+      tgt.scale = 1 + p * 0.18;
+      tgt.opacity = 1 - p * 0.55;
+    }
+
+    function paint() {
+      cur.bg = lerp(cur.bg, tgt.bg, 0.12);
+      cur.mid = lerp(cur.mid, tgt.mid, 0.12);
+      cur.fg = lerp(cur.fg, tgt.fg, 0.12);
+      cur.scale = lerp(cur.scale, tgt.scale, 0.12);
+      cur.opacity = lerp(cur.opacity, tgt.opacity, 0.12);
+
+      if (bg) bg.style.transform = "translate3d(0," + cur.bg.toFixed(2) + "px,0)";
+      if (mid) mid.style.transform = "translate3d(0," + cur.mid.toFixed(2) + "px,0)";
+      if (midAsset) {
+        midAsset.style.transform =
+          "translate3d(8%,4%,0) scale(" + cur.scale.toFixed(3) + ")";
+        midAsset.style.opacity = String(0.45 + cur.opacity * 0.4);
+      }
+      if (fg) fg.style.transform = "translate3d(0," + cur.fg.toFixed(2) + "px,0)";
+      if (heroCard) {
+        heroCard.style.opacity = String(Math.max(0.25, cur.opacity));
+      }
+      // floats keep CSS chip-float; they ride on layer-fg
+    }
+
+    function frame() {
+      measure();
+      paint();
+      window.requestAnimationFrame(frame);
+    }
+
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure, { passive: true });
+    measure();
+    window.requestAnimationFrame(frame);
+  }
+
+  /* ── Section reveals (IntersectionObserver — lightweight) ── */
+  function initSectionReveals() {
+    var items = $$("[data-scroll-anim]");
+    if (!items.length) return;
+
+    if (isStaticMode() || !("IntersectionObserver" in window)) {
+      items.forEach(function (n) {
+        n.classList.add("is-in");
+      });
+      return;
+    }
+
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-in");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
+    );
+    items.forEach(function (n) {
+      io.observe(n);
+    });
+  }
+
+  /* ── Optional GSAP enhancement for sections ── */
+  function initGsapSections() {
     if (isStaticMode()) return;
     if (typeof window.gsap === "undefined" || typeof window.ScrollTrigger === "undefined") {
       return;
     }
-
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
-    var runway = $("[data-parallax-runway]");
-    var layerBg = $(".layer-bg");
-    var layerMid = $(".layer-mid");
-    var layerFg = $(".layer-fg");
-    var midAsset = $(".mid-asset");
-    var heroCard = $(".hero-card");
-
-    if (runway) {
-      // Master scrubbed timeline — plays forward & backward with scroll
-      var tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: runway,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true, // exact scrub binding
-        },
-      });
-
-      // Background @ 0.2x relative travel
-      if (layerBg) {
-        tl.fromTo(
-          layerBg,
-          { yPercent: 0 },
-          { yPercent: -20, ease: "none" }, // 0.2 of 100
-          0
-        );
-      }
-
-      // Midground @ 0.5x + scale / rotate
-      if (layerMid) {
-        tl.fromTo(
-          layerMid,
-          { yPercent: 0 },
-          { yPercent: -50, ease: "none" },
-          0
-        );
-      }
-      if (midAsset) {
-        tl.fromTo(
-          midAsset,
-          { scale: 0.88, rotateY: -8, opacity: 0.35 },
-          { scale: 1.18, rotateY: 12, opacity: 0.7, ease: "none" },
-          0
-        );
-      }
-
-      // Foreground @ 1.0x
-      if (layerFg) {
-        tl.fromTo(
-          layerFg,
-          { yPercent: 0 },
-          { yPercent: -100, ease: "none" },
-          0
-        );
-      }
-      if (heroCard) {
-        tl.fromTo(
-          heroCard,
-          { scale: 1, rotateX: 0, opacity: 1 },
-          { scale: 0.92, rotateX: 8, opacity: 0.25, ease: "none" },
-          0
-        );
-      }
-
-      // Floating fg chips
-      $$(".fg-float").forEach(function (chip, i) {
-        tl.fromTo(
-          chip,
-          { y: 0, rotateZ: 0, opacity: 0.9 },
-          {
-            y: -120 - i * 40,
-            rotateZ: (i % 2 === 0 ? 1 : -1) * 18,
-            opacity: 0.15,
-            ease: "none",
-          },
-          0
-        );
-      });
-    }
-
-    // Section layer velocities + card reveals (scrubbed)
     $$("[data-stack-section]").forEach(function (section) {
       var bg = section.querySelector(".section-bg");
-      var mid = section.querySelector(".section-mid");
       var fg = section.querySelector(".section-fg");
-      var cards = section.querySelectorAll('[data-scroll-anim="card"], [data-scroll-anim="fade-up"]');
-
       if (bg) {
         gsap.fromTo(
           bg,
-          { yPercent: -8 },
+          { yPercent: -6 },
           {
             yPercent: 8,
             ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
+            scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: true },
           }
         );
       }
-
-      if (mid) {
-        gsap.fromTo(
-          mid,
-          { y: 40 },
-          {
-            y: -20,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: 1,
-            },
-          }
-        );
-      }
-
       if (fg) {
         gsap.fromTo(
           fg,
-          { yPercent: 10 },
+          { yPercent: 8 },
           {
-            yPercent: -25,
+            yPercent: -20,
             ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
+            scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: true },
           }
         );
       }
-
-      cards.forEach(function (card) {
-        gsap.fromTo(
-          card,
-          { opacity: 0.15, y: 48, rotateX: 10, scale: 0.96 },
-          {
-            opacity: 1,
-            y: 0,
-            rotateX: 0,
-            scale: 1,
-            ease: "none",
-            scrollTrigger: {
-              trigger: card,
-              start: "top 92%",
-              end: "top 45%",
-              scrub: true,
-            },
-          }
-        );
-      });
     });
   }
 
@@ -447,7 +383,7 @@
       if (typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined") {
         window.clearInterval(id);
         cb();
-      } else if (tries > 50) {
+      } else if (tries > 40) {
         window.clearInterval(id);
       }
     }, 40);
@@ -461,11 +397,12 @@
     initTypewriter();
     initNav();
     setYear();
+    initSectionReveals();
 
-    // Enhanced desktop only — strip tracking on static/mobile
     if (!isStaticMode()) {
       initMouseTilt();
-      waitForGsap(initScrollParallax);
+      initNativeParallax();
+      waitForGsap(initGsapSections);
     }
   }
 
