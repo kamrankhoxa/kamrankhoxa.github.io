@@ -60,7 +60,6 @@
   <!-- Critical visual preloads (WebP) -->
   <link rel="preload" as="image" href="/assets/images/layer-bg-nebula.webp" type="image/webp" fetchpriority="high" />
   <link rel="preload" as="image" href="/assets/images/profile.webp" type="image/webp" fetchpriority="high" />
-  <link rel="preload" as="image" href="/assets/images/layer-mid-product.webp" type="image/webp" />
 
   <script type="application/ld+json">
   {
@@ -152,19 +151,45 @@
         <div class="bg-veil"></div>
       </div>
 
-      <!-- Midground layer · 0.5x -->
+      <!-- Midground layer · 0.5x · CSS glass product (true transparency) -->
       <div class="stack-layer layer-mid" data-velocity="0.5" aria-hidden="true">
         <div class="mid-asset" data-scroll-anim="mid">
-          <picture>
-            <source srcset="/assets/images/layer-mid-product.webp" type="image/webp" />
-            <img
-              src="/assets/images/layer-mid-product.png"
-              alt=""
-              width="800"
-              height="800"
-              decoding="async"
-            />
-          </picture>
+          <div class="product-mock" aria-hidden="true">
+            <aside class="pm-side">
+              <span class="pm-ico is-active"></span>
+              <span class="pm-ico"></span>
+              <span class="pm-ico"></span>
+              <span class="pm-ico"></span>
+              <span class="pm-dot"></span>
+            </aside>
+            <div class="pm-main">
+              <header class="pm-top">
+                <span class="pm-avatar"></span>
+                <span class="pm-lines"></span>
+                <span class="pm-toggle"></span>
+              </header>
+              <div class="pm-grid">
+                <div class="pm-card pm-chart">
+                  <svg viewBox="0 0 200 100" preserveAspectRatio="none">
+                    <path d="M0 70 C40 20, 80 90, 120 40 S180 20, 200 55" fill="none" stroke="rgba(62,224,192,0.9)" stroke-width="2.5"/>
+                    <path d="M0 55 C50 80, 90 30, 140 60 S180 70, 200 35" fill="none" stroke="rgba(79,140,255,0.75)" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="pm-card pm-donut">
+                  <span class="ring"></span>
+                  <span class="leg"></span><span class="leg"></span><span class="leg"></span>
+                </div>
+                <div class="pm-card pm-code">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="pm-card pm-list">
+                  <div class="row"><i></i><b></b></div>
+                  <div class="row"><i></i><b></b></div>
+                  <div class="row"><i></i><b></b></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
