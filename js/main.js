@@ -1,12 +1,14 @@
 /**
- * main.js — Scroll engine: hero parallax + section track animations
- * Depends on window.PORTFOLIO from data.js
+ * main.js — Immersive 3D scene (GSAP ScrollTrigger) + section tracks
+ * Depends on: window.PORTFOLIO (data.js), gsap, ScrollTrigger
  */
 (function () {
   "use strict";
 
   const data = window.PORTFOLIO || {};
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const MAX_TILT = 10; // degrees
+  const PERSPECTIVE = 800; // "depth 8" → 800px
 
   function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -23,28 +25,11 @@
   function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
   }
-  function lerp(a, b, t) {
-    return a + (b - a) * t;
-  }
-  function isMobile() {
-    return window.innerWidth <= 768;
+  function isDesktopScene() {
+    return window.innerWidth > 768 && !reduceMotion;
   }
 
-  /* ══════════════════════════════════════
-     Content renderers
-     ══════════════════════════════════════ */
-  function renderFloatTags() {
-    const layer = $("[data-float-tags]");
-    if (!layer || !data.floatTags) return;
-    data.floatTags.forEach(function (tag) {
-      const node = el("span", "float-tag", tag.label);
-      node.style.left = tag.x + "%";
-      node.style.top = tag.y + "%";
-      node.dataset.depth = String(tag.depth || 1);
-      layer.appendChild(node);
-    });
-  }
-
+  /* ── Content renderers ── */
   function renderSkills() {
     const grid = $("[data-skills-grid]");
     if (!grid || !data.skills) return;
@@ -131,14 +116,11 @@
     });
   }
 
-  /* ══════════════════════════════════════
-     Typewriter
-     ══════════════════════════════════════ */
   function initTypewriter() {
     const target = $("[data-typewriter]");
     if (!target) return;
     const full = data.typewriterText || target.textContent.trim();
-    if (reduceMotion) {
+    if (reduceMotion || !isDesktopScene()) {
       target.textContent = full;
       return;
     }
@@ -151,73 +133,128 @@
         window.setTimeout(tick, 36);
       }
     }
-    window.setTimeout(tick, 350);
+    window.setTimeout(tick, 400);
   }
 
-  /* ══════════════════════════════════════
-     Hero parallax — scrollY driven, no sticky dependency
-     bg 0.15x · mid 0.35x · fg 1.0x
-     ══════════════════════════════════════ */
-  function initParallax() {
-    const hero = $(".hero");
-    const runway = $(".hero-runway");
-    const layers = $$(".parallax-layer[data-speed]");
-    const floatTags = $$(".float-tag");
-    if (!hero || !layers.length) return;
+  /* ══════════════════════════════════════════
+     3D Scene · GSAP ScrollTrigger (scrub only)
+     bg @ 0.3x · mid scale · no scrolljacking
+     ══════════════════════════════════════════ */
+  function initScene3D() {
+    const runway = $(".scene-runway");
+    const stage = $("[data-scene-stage]");
+    const layerBg = $('[data-layer="bg"]');
+    const layerMid = $('[data-layer="mid"]');
+    const midStack = $(".mid-stack");
+    const layerFg = $('[data-layer="fg"]');
 
-    let current = { bg: 0, mid: 0, fg: 0 };
-    let target = { bg: 0, mid: 0, fg: 0 };
-    const ease = 0.14;
+    if (!runway || !stage || typeof window.gsap === "undefined") return;
+    if (!isDesktopScene()) return;
 
-    function measure() {
-      if (reduceMotion || isMobile()) {
-        target.bg = target.mid = target.fg = 0;
-        return;
-      }
+    window.gsap.registerPlugin(window.ScrollTrigger);
 
-      // Use raw page scroll while hero is on screen
-      const y = window.scrollY || window.pageYOffset || 0;
-      const heroBottom = runway
-        ? runway.offsetTop + runway.offsetHeight
-        : hero.offsetTop + hero.offsetHeight;
+    // Soft pin without hijacking scroll — scrub interpolates frames
+    const tl = window.gsap.timeline({
+      scrollTrigger: {
+        trigger: runway,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 0.65, // buttery native-feel interpolation
+        anticipatePin: 1,
+      },
+    });
 
-      // Only drive while user is still in/near hero zone
-      const activeY = clamp(y, 0, Math.max(heroBottom, window.innerHeight * 2));
-
-      target.bg = activeY * 0.15;
-      target.mid = activeY * 0.35;
-      target.fg = activeY * 1.0;
+    // Background moves at ~0.3x relative travel
+    if (layerBg) {
+      tl.fromTo(
+        layerBg,
+        { yPercent: 0 },
+        { yPercent: -18, ease: "none" }, // ~0.3 of typical full travel
+        0
+      );
     }
 
-    function paint() {
-      current.bg = lerp(current.bg, target.bg, ease);
-      current.mid = lerp(current.mid, target.mid, ease);
-      current.fg = lerp(current.fg, target.fg, ease);
+    // Mid product scales smoothly
+    if (midStack) {
+      tl.fromTo(
+        midStack,
+        { scale: 0.92, yPercent: 8, opacity: 0.75 },
+        { scale: 1.12, yPercent: -22, opacity: 1, ease: "none" },
+        0
+      );
+    } else if (layerMid) {
+      tl.fromTo(
+        layerMid,
+        { scale: 0.95 },
+        { scale: 1.1, ease: "none" },
+        0
+      );
+    }
 
-      layers.forEach(function (layer) {
-        const speed = parseFloat(layer.dataset.speed || "1");
-        var y = 0;
-        if (speed <= 0.2) y = current.bg;
-        else if (speed <= 0.5) y = current.mid;
-        else y = current.fg;
+    // Foreground rises slightly + fades toward end of runway
+    if (layerFg) {
+      tl.fromTo(
+        layerFg,
+        { yPercent: 0, opacity: 1 },
+        { yPercent: -12, opacity: 0.35, ease: "none" },
+        0
+      );
+    }
+  }
 
-        // Move opposite to scroll = classic depth (layer lags / rises)
-        layer.style.transform = "translate3d(0, " + (-y).toFixed(2) + "px, 0)";
-      });
+  /* ══════════════════════════════════════════
+     Track 3D · mouse tilt (max 10°, perspective 800)
+     ══════════════════════════════════════════ */
+  function initTrack3D() {
+    const stage = $("[data-tilt-stage]");
+    const card = $("[data-tilt-card]");
+    if (!stage || !card || !isDesktopScene()) return;
 
-      floatTags.forEach(function (tag) {
-        const depth = parseFloat(tag.dataset.depth || "1");
-        const extra = current.mid * (depth - 1) * 0.45;
-        tag.style.transform = "translate3d(0, " + (-extra).toFixed(2) + "px, 0)";
-      });
+    let rect = stage.getBoundingClientRect();
+    let targetRX = 0;
+    let targetRY = 0;
+    let curRX = 0;
+    let curRY = 0;
+    let raf = 0;
+
+    function measure() {
+      rect = stage.getBoundingClientRect();
+    }
+
+    function onMove(e) {
+      const x = (e.clientX - rect.left) / Math.max(rect.width, 1);
+      const y = (e.clientY - rect.top) / Math.max(rect.height, 1);
+      // Map 0→1 to ±MAX_TILT
+      targetRY = clamp((x - 0.5) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
+      targetRX = clamp((0.5 - y) * 2 * MAX_TILT, -MAX_TILT, MAX_TILT);
+    }
+
+    function onLeave() {
+      targetRX = 0;
+      targetRY = 0;
     }
 
     function frame() {
-      measure();
-      paint();
-      window.requestAnimationFrame(frame);
+      curRX += (targetRX - curRX) * 0.12;
+      curRY += (targetRY - curRY) * 0.12;
+      card.style.transform =
+        "perspective(" +
+        PERSPECTIVE +
+        "px) rotateX(" +
+        curRX.toFixed(2) +
+        "deg) rotateY(" +
+        curRY.toFixed(2) +
+        "deg) translateZ(24px)";
+      raf = window.requestAnimationFrame(frame);
     }
 
+    stage.addEventListener("pointermove", onMove, { passive: true });
+    stage.addEventListener("pointerleave", onLeave, { passive: true });
+    window.addEventListener("resize", measure, { passive: true });
+    measure();
+    raf = window.requestAnimationFrame(frame);
+
+    // Keep rect fresh while scrolling
     window.addEventListener(
       "scroll",
       function () {
@@ -225,41 +262,30 @@
       },
       { passive: true }
     );
-    window.addEventListener("resize", measure, { passive: true });
-    measure();
-    window.requestAnimationFrame(frame);
+
+    return function destroy() {
+      window.cancelAnimationFrame(raf);
+    };
   }
 
-  /* ══════════════════════════════════════
-     Section scroll-track — top → bottom
-     Progress 0→1 as each section crosses the viewport
-     ══════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     Section scroll-track · top → bottom
+     ══════════════════════════════════════════ */
   function sectionProgress(section) {
     const rect = section.getBoundingClientRect();
     const vh = window.innerHeight || 1;
-    // Start when top hits bottom of viewport; end when top hits ~20% from top
     const start = vh * 0.92;
     const end = vh * 0.18;
-    const raw = (start - rect.top) / (start - end);
-    return clamp(raw, 0, 1);
+    return clamp((start - rect.top) / (start - end), 0, 1);
   }
 
   function initScrollTracks() {
     const sections = $$("[data-scroll-track]");
     if (!sections.length) return;
 
-    // Stagger children
-    sections.forEach(function (section) {
-      const items = $$(".track-item", section);
-      items.forEach(function (item, i) {
-        item.style.setProperty("--i", String(i));
-      });
-    });
-
     if (reduceMotion) {
       sections.forEach(function (section) {
         section.style.setProperty("--scroll-progress", "1");
-        section.classList.add("is-inview");
         $$(".track-item", section).forEach(function (item) {
           item.style.setProperty("--item-progress", "1");
         });
@@ -268,58 +294,39 @@
     }
 
     let ticking = false;
-
     function update() {
       ticking = false;
-      const vh = window.innerHeight || 1;
-
       sections.forEach(function (section) {
         const p = sectionProgress(section);
         section.style.setProperty("--scroll-progress", p.toFixed(4));
-        section.classList.toggle("is-inview", p > 0.02);
-
-        // Children animate top→bottom with staggered progress
-        const items = $$(".track-item", section);
-        items.forEach(function (item, i) {
+        section.style.setProperty("--track-shift", ((1 - p) * 40).toFixed(2) + "px");
+        $$(".track-item", section).forEach(function (item, i) {
           const delay = Math.min(0.55, i * 0.07);
           const ip = clamp((p - delay) / Math.max(0.001, 1 - delay), 0, 1);
           item.style.setProperty("--item-progress", ip.toFixed(4));
         });
-
-        // Optional: parallax nudge on section background accent
-        const shift = (1 - p) * 40;
-        section.style.setProperty("--track-shift", shift.toFixed(2) + "px");
       });
     }
-
     function onScroll() {
       if (!ticking) {
         ticking = true;
         window.requestAnimationFrame(update);
       }
     }
-
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     update();
   }
 
-  /* ══════════════════════════════════════
-     Nav
-     ══════════════════════════════════════ */
   function initNav() {
     const nav = $("#site-nav");
     const toggle = $("[data-nav-toggle]");
     const links = $(".nav-links");
-
     function onScroll() {
-      if (!nav) return;
-      nav.classList.toggle("is-scrolled", window.scrollY > 24);
+      if (nav) nav.classList.toggle("is-scrolled", window.scrollY > 24);
     }
-
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
-
     if (toggle && links) {
       toggle.addEventListener("click", function () {
         const open = toggle.getAttribute("aria-expanded") === "true";
@@ -340,17 +347,35 @@
     if (node) node.textContent = String(new Date().getFullYear());
   }
 
+  function waitForGsap(cb) {
+    if (typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined") {
+      cb();
+      return;
+    }
+    let tries = 0;
+    const id = window.setInterval(function () {
+      tries += 1;
+      if (typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined") {
+        window.clearInterval(id);
+        cb();
+      } else if (tries > 40) {
+        window.clearInterval(id);
+        cb(); // continue without GSAP — fallback still works
+      }
+    }, 50);
+  }
+
   function init() {
-    renderFloatTags();
     renderSkills();
     renderProjects();
     renderExperience();
     renderResearch();
     initTypewriter();
-    initParallax();
     initScrollTracks();
     initNav();
     setYear();
+    initTrack3D();
+    waitForGsap(initScene3D);
   }
 
   if (document.readyState === "loading") {
