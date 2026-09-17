@@ -187,85 +187,103 @@ a:hover { text-decoration: underline; }
 }
 
 /* ═══════════════════════════════════════════
-   HERO · Parallax stack
+   HERO · Sticky multi-layer parallax
+   Runway (~200vh) keeps the stage pinned while
+   layers scrub at 0.15x / 0.35x / 1x.
    ═══════════════════════════════════════════ */
-.hero {
+.hero-runway {
   position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 220vh; /* scroll distance that drives parallax */
+}
+
+.hero {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
   display: grid;
   place-items: center;
   overflow: hidden;
   isolation: isolate;
+  background: var(--bg);
 }
 
 .parallax-layer {
   position: absolute;
-  inset: 0;
+  inset: -12% 0; /* room to move without clipping edges */
   will-change: transform;
   pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 .layer-fg {
+  inset: 0;
   pointer-events: auto;
   display: grid;
   place-items: center;
   padding: calc(var(--nav-h) + 2rem) 1.25rem 4rem;
+  z-index: 3;
 }
+.layer-mid { z-index: 2; }
+.layer-bg { z-index: 1; }
 
-/* Background mesh @ 0.15x */
+/* Background mesh — animate background-position, not transform
+   (transform is reserved for parallax JS) */
 .tech-mesh {
   position: absolute;
-  inset: -20%;
+  inset: -30%;
   background-image:
-    linear-gradient(rgba(79, 140, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(62, 224, 192, 0.05) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 75%);
-  animation: mesh-drift 28s linear infinite;
+    linear-gradient(rgba(79, 140, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(62, 224, 192, 0.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 78%);
+  animation: mesh-drift 22s linear infinite;
 }
 .glow {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.45;
+  opacity: 0.5;
 }
 .glow-a {
-  width: 420px;
-  height: 420px;
-  background: rgba(62, 224, 192, 0.22);
-  top: 12%;
-  left: 8%;
+  width: 480px;
+  height: 480px;
+  background: rgba(62, 224, 192, 0.26);
+  top: 8%;
+  left: 4%;
 }
 .glow-b {
-  width: 380px;
-  height: 380px;
-  background: rgba(79, 140, 255, 0.2);
-  bottom: 10%;
-  right: 5%;
+  width: 420px;
+  height: 420px;
+  background: rgba(79, 140, 255, 0.24);
+  bottom: 5%;
+  right: 0%;
 }
 
 @keyframes mesh-drift {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-64px, -64px, 0); }
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 56px 56px, 56px 56px; }
 }
 
-/* Midground floating tags @ 0.35x */
-.layer-mid { overflow: hidden; }
+/* Midground floating tags */
+.layer-mid { overflow: visible; }
 .float-tag {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  font-size: clamp(0.72rem, 1.5vw, 0.9rem);
   font-weight: 500;
-  color: rgba(232, 238, 247, 0.45);
-  padding: 0.4rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(232, 238, 247, 0.62);
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(62, 224, 192, 0.18);
   border-radius: 999px;
-  background: rgba(17, 24, 39, 0.35);
-  backdrop-filter: blur(8px);
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   white-space: nowrap;
   user-select: none;
   will-change: transform;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 /* Foreground content */
@@ -363,10 +381,16 @@ a:hover { text-decoration: underline; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Collapse parallax offsets on touch / small screens */
-@media (max-width: 768px), (hover: none) and (pointer: coarse) {
-  .parallax-layer { transform: none !important; will-change: auto; }
-  .float-tag { opacity: 0.28; font-size: 0.68rem; }
+/* Collapse parallax offsets on small screens only (keep desktop working) */
+@media (max-width: 768px) {
+  .hero-runway { height: 100vh; height: 100dvh; }
+  .hero { position: relative; }
+  .parallax-layer {
+    inset: 0;
+    transform: none !important;
+    will-change: auto;
+  }
+  .float-tag { opacity: 0.32; font-size: 0.68rem; }
   .tech-mesh { animation: none; }
 }
 
@@ -376,6 +400,8 @@ a:hover { text-decoration: underline; }
     animation: none !important;
     transition: none !important;
   }
+  .hero-runway { height: 100vh; height: 100dvh; }
+  .hero { position: relative; }
   .parallax-layer { transform: none !important; will-change: auto; }
 }
 

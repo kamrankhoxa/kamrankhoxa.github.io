@@ -7,8 +7,7 @@
 
   const data = window.PORTFOLIO || {};
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const isTouchOrNarrow = () =>
-    window.matchMedia("(max-width: 768px), (hover: none) and (pointer: coarse)").matches;
+  const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
 
   /* ── Helpers ── */
   function $(sel, root) {
@@ -22,6 +21,12 @@
     if (className) node.className = className;
     if (html != null) node.innerHTML = html;
     return node;
+  }
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
   }
 
   /* ── Render content from data.js ── */
@@ -154,56 +159,89 @@
     window.setTimeout(tick, 400);
   }
 
-  /* ── Smooth parallax (rAF + translateY) ── */
+  /* ── Sticky multi-layer parallax (smooth lerp + translateY) ──
+     Progress 0→1 across .hero-runway. Each layer moves at data-speed:
+     bg 0.15x · mid 0.35x · fg 1x
+  */
   function initParallax() {
+    const runway = $(".hero-runway");
     const layers = $$(".parallax-layer[data-speed]");
     const floatTags = $$(".float-tag");
-    let ticking = false;
-    let lastY = window.scrollY;
+    if (!runway || !layers.length) return;
 
-    function update() {
-      ticking = false;
-      if (reduceMotion || isTouchOrNarrow()) {
+    // Travel distance (px) at full speed (1x) across the runway
+    const TRAVEL = 420;
+    const LERP = 0.12; // lower = silkier
+
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let rafId = 0;
+    let running = true;
+
+    function readProgress() {
+      if (reduceMotion || isMobile()) return 0;
+      const rect = runway.getBoundingClientRect();
+      const total = Math.max(1, runway.offsetHeight - window.innerHeight);
+      // How far we've scrolled through the runway
+      const scrolled = clamp(-rect.top, 0, total);
+      return scrolled / total;
+    }
+
+    function apply(progress) {
+      if (reduceMotion || isMobile()) {
         layers.forEach(function (layer) {
-          layer.style.transform = "";
+          layer.style.transform = "translate3d(0, 0, 0)";
         });
         floatTags.forEach(function (tag) {
-          tag.style.transform = "";
+          tag.style.transform = "translate3d(0, 0, 0)";
         });
         return;
       }
 
-      const y = lastY;
       layers.forEach(function (layer) {
         const speed = parseFloat(layer.dataset.speed || "1");
-        // Foreground stays natural; bg/mid move slower relative to scroll
-        if (speed >= 1) {
-          layer.style.transform = "";
-          return;
-        }
-        const offset = y * (1 - speed);
-        layer.style.transform = "translate3d(0, " + offset.toFixed(2) + "px, 0)";
+        // Negative = rise upward as user scrolls down
+        const y = -(progress * TRAVEL * speed);
+        layer.style.transform = "translate3d(0, " + y.toFixed(2) + "px, 0)";
       });
 
-      // Extra depth on individual tags
+      // Per-tag depth multiplier on top of mid layer
       floatTags.forEach(function (tag) {
         const depth = parseFloat(tag.dataset.depth || "1");
-        const tagOffset = y * 0.35 * depth * 0.15;
-        tag.style.transform = "translate3d(0, " + tagOffset.toFixed(2) + "px, 0)";
+        const y = -(progress * TRAVEL * 0.35 * (depth - 1) * 0.85);
+        tag.style.transform = "translate3d(0, " + y.toFixed(2) + "px, 0)";
       });
     }
 
-    function onScroll() {
-      lastY = window.scrollY || window.pageYOffset;
-      if (!ticking) {
-        ticking = true;
-        window.requestAnimationFrame(update);
+    function tick() {
+      targetProgress = readProgress();
+      currentProgress = lerp(currentProgress, targetProgress, reduceMotion ? 1 : LERP);
+
+      // Snap when close enough to save work
+      if (Math.abs(targetProgress - currentProgress) < 0.0008) {
+        currentProgress = targetProgress;
+      }
+
+      apply(currentProgress);
+
+      if (running) rafId = window.requestAnimationFrame(tick);
+    }
+
+    function onResize() {
+      targetProgress = readProgress();
+      if (isMobile() || reduceMotion) {
+        currentProgress = targetProgress;
+        apply(0);
       }
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    update();
+    window.addEventListener("resize", onResize, { passive: true });
+    document.addEventListener("visibilitychange", function () {
+      running = !document.hidden;
+      if (running) rafId = window.requestAnimationFrame(tick);
+    });
+
+    rafId = window.requestAnimationFrame(tick);
   }
 
   /* ── Scroll-triggered reveals (IntersectionObserver) ── */

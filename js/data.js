@@ -177,15 +177,15 @@ window.PORTFOLIO = {
   research: [
     {
       title: "Artificial Intelligence",
-      body: "Exploring ML, NLP, and AI automation using Python for healthcare, finance, and security.",
+      body: "Exploring ML, NLP, and AI automation using Python for healthcare, finance, and security applications.",
     },
     {
-      title: "Blockchain Technology",
-      body: "Investigating smart contracts, dApps, and cryptographic protocols for decentralized systems.",
+      title: "Computer Vision & Deep Learning",
+      body: "Investigating neural network architectures for image recognition, object detection, and real-time visual analytics.",
     },
     {
-      title: "AI–Blockchain Integration",
-      body: "Researching privacy-preserving, transparent, and autonomous intelligent systems.",
+      title: "Responsible & Explainable AI",
+      body: "Researching fairness, transparency, and interpretability in autonomous intelligent systems.",
     },
   ],
 };
