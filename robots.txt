@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
+Allow: /Kamran_Fareed_Resume.pdf
+Allow: /Kamran_Fareed_Research_Resume.pdf
+Allow: /dp.png
+
 Sitemap: https://kamrankhoxa.github.io/sitemap.xml
