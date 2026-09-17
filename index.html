@@ -8,8 +8,8 @@
   <meta name="keywords" content="Kamran Fareed, KamranKhoxa, Software Engineer, Full Stack Developer, TypeScript, React, Node.js, Python, SQL, microservices, Docker, AWS, Codebotx" />
   <meta name="author" content="Kamran Fareed" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-  <meta name="theme-color" content="#0B0F19" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#FAFAF8" />
+  <meta name="color-scheme" content="light" />
   <meta name="format-detection" content="telephone=yes" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="google-site-verification" content="FrnhewU1yAW7UbyVQdG2fZuj2qeojCBDLv2VQ0QRwT0" />
@@ -54,11 +54,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Critical visual preloads (WebP) -->
-  <link rel="preload" as="image" href="/assets/images/layer-bg-nebula.webp" type="image/webp" fetchpriority="high" />
   <link rel="preload" as="image" href="/assets/images/profile.webp" type="image/webp" fetchpriority="high" />
 
   <script type="application/ld+json">
@@ -70,8 +67,7 @@
         "@id": "https://kamrankhoxa.github.io/#website",
         "url": "https://kamrankhoxa.github.io/",
         "name": "Kamran Fareed",
-        "publisher": { "@id": "https://kamrankhoxa.github.io/#person" },
-        "inLanguage": "en-US"
+        "publisher": { "@id": "https://kamrankhoxa.github.io/#person" }
       },
       {
         "@type": "Person",
@@ -98,18 +94,11 @@
   </script>
 
   <link rel="stylesheet" href="/css/styles.css" />
-
-  <!-- Enhanced unless clearly mobile/reduced-motion (don't kill desktop touch laptops) -->
-  <script>
-    (function () {
-      var narrow = window.matchMedia("(max-width: 768px)").matches;
-      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      document.documentElement.classList.add(narrow || reduce ? "is-static" : "is-enhanced");
-    })();
-  </script>
 </head>
 <body>
   <a class="skip-link" href="#about">Skip to content</a>
+
+  <div class="page-glow" aria-hidden="true"></div>
 
   <header class="site-nav" id="site-nav">
     <div class="nav-inner">
@@ -127,126 +116,48 @@
     </div>
   </header>
 
-  <!-- ════════════════════════════════════════════════
-       HERO · multi-layer stacking context
-       bg 0.2x · mid 0.5x · fg 1.0x
-       ════════════════════════════════════════════════ -->
-  <div class="parallax-runway" id="hero" data-parallax-runway>
-    <section class="parallax-scene" aria-label="Introduction">
-
-      <!-- Background layer · 0.2x -->
-      <div class="stack-layer layer-bg" data-velocity="0.2" aria-hidden="true">
-        <picture>
-          <source srcset="/assets/images/layer-bg-nebula.webp" type="image/webp" />
-          <img
-            class="bg-img"
-            src="/assets/images/layer-bg-nebula.png"
-            alt=""
-            width="1920"
-            height="1080"
-            decoding="async"
-            fetchpriority="high"
-          />
-        </picture>
-        <div class="bg-veil"></div>
+  <!-- Hero -->
+  <section class="hero" id="hero" aria-label="Introduction">
+    <div class="hero-inner">
+      <picture>
+        <source srcset="/assets/images/profile.webp" type="image/webp" />
+        <img
+          class="hero-avatar"
+          src="/assets/images/profile.png"
+          alt="Kamran Fareed"
+          width="112"
+          height="112"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </picture>
+      <p class="hero-kicker">@KamranKhoxa · Associate Team Lead</p>
+      <h1 class="hero-name">Kamran</h1>
+      <p class="hero-tagline" aria-live="polite">
+        <span data-typewriter>Building Full-Stack Solutions &amp; Smart Automation</span><span class="cursor" aria-hidden="true">|</span>
+      </p>
+      <p class="hero-bio">
+        Software engineer with 4.5+ years shipping microservices, SaaS platforms, and automation —
+        TypeScript, PHP, Docker &amp; AWS. Based in D.G. Khan, PK.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#projects">View My Projects</a>
+        <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Resume.pdf" download>Job Resume</a>
+        <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Research_Resume.pdf" download>Research Resume</a>
       </div>
-
-      <!-- Midground layer · 0.5x · CSS glass product (true transparency) -->
-      <div class="stack-layer layer-mid" data-velocity="0.5" aria-hidden="true">
-        <div class="mid-asset" data-scroll-anim="mid">
-          <div class="product-mock" aria-hidden="true">
-            <aside class="pm-side">
-              <span class="pm-ico is-active"></span>
-              <span class="pm-ico"></span>
-              <span class="pm-ico"></span>
-              <span class="pm-ico"></span>
-              <span class="pm-dot"></span>
-            </aside>
-            <div class="pm-main">
-              <header class="pm-top">
-                <span class="pm-avatar"></span>
-                <span class="pm-lines"></span>
-                <span class="pm-toggle"></span>
-              </header>
-              <div class="pm-grid">
-                <div class="pm-card pm-chart">
-                  <svg viewBox="0 0 200 100" preserveAspectRatio="none">
-                    <path d="M0 70 C40 20, 80 90, 120 40 S180 20, 200 55" fill="none" stroke="rgba(62,224,192,0.9)" stroke-width="2.5"/>
-                    <path d="M0 55 C50 80, 90 30, 140 60 S180 70, 200 35" fill="none" stroke="rgba(79,140,255,0.75)" stroke-width="2"/>
-                  </svg>
-                </div>
-                <div class="pm-card pm-donut">
-                  <span class="ring"></span>
-                  <span class="leg"></span><span class="leg"></span><span class="leg"></span>
-                </div>
-                <div class="pm-card pm-code">
-                  <span></span><span></span><span></span><span></span><span></span>
-                </div>
-                <div class="pm-card pm-list">
-                  <div class="row"><i></i><b></b></div>
-                  <div class="row"><i></i><b></b></div>
-                  <div class="row"><i></i><b></b></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="hero-meta">
+        <span>D.G. Khan, PK</span>
+        <a href="mailto:kamrankhoxa@outlook.com">kamrankhoxa@outlook.com</a>
+        <a href="tel:+923352455552">+92 335 2455552</a>
       </div>
-
-      <!-- Foreground layer · 1.0x · mouse tilt targets -->
-      <div class="stack-layer layer-fg" data-velocity="1">
-        <div class="fg-float float-a" data-scroll-anim="float-a" aria-hidden="true">
-          <span class="tilt-inner" data-tilt>TypeScript</span>
-        </div>
-        <div class="fg-float float-b" data-scroll-anim="float-b" aria-hidden="true">
-          <span class="tilt-inner" data-tilt>Next.js</span>
-        </div>
-        <div class="fg-float float-c" data-scroll-anim="float-c" aria-hidden="true">
-          <span class="tilt-inner" data-tilt>AWS</span>
-        </div>
-
-        <article class="hero-card glass" data-scroll-anim="hero-card">
-          <div class="tilt-inner" data-tilt>
-          <picture>
-            <source srcset="/assets/images/profile.webp" type="image/webp" />
-            <img
-              class="hero-avatar"
-              src="/assets/images/profile.png"
-              alt="Kamran Fareed"
-              width="96"
-              height="96"
-              decoding="async"
-              fetchpriority="high"
-            />
-          </picture>
-          <p class="hero-kicker">@KamranKhoxa · Associate Team Lead</p>
-          <h1 class="hero-name">Kamran</h1>
-          <p class="hero-tagline" aria-live="polite">
-            <span data-typewriter>Building Full-Stack Solutions &amp; Smart Automation</span><span class="cursor" aria-hidden="true">|</span>
-          </p>
-          <p class="hero-bio">
-            Software engineer with 4.5+ years shipping microservices, SaaS platforms, and automation —
-            TypeScript, PHP, Docker &amp; AWS. Based in D.G. Khan, PK.
-          </p>
-          <div class="hero-cta">
-            <a class="btn btn-primary" href="#projects">View My Projects</a>
-            <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Resume.pdf" download>Job Resume</a>
-            <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Research_Resume.pdf" download>Research Resume</a>
-          </div>
-          </div>
-        </article>
-
-        <a class="scroll-hint" href="#about" aria-label="Scroll to about"><span></span></a>
-      </div>
-    </section>
-  </div>
+    </div>
+    <a class="scroll-hint" href="#about" aria-label="Scroll to about"><span></span></a>
+  </section>
 
   <main>
-    <!-- About · layered section -->
-    <section class="section stack-section" id="about" data-stack-section>
-      <div class="section-bg" data-velocity="0.2" aria-hidden="true"></div>
-      <div class="container section-mid" data-velocity="0.5">
-        <header class="section-head" data-scroll-anim="fade-up">
+    <section class="section" id="about">
+      <div class="container">
+        <header class="section-head reveal">
           <p class="eyebrow">About</p>
           <h2>Engineer. Builder. Problem solver.</h2>
           <p class="lede">
@@ -256,21 +167,16 @@
           </p>
         </header>
         <div class="about-stats">
-          <div class="stat glass" data-scroll-anim="card"><div class="tilt-inner" data-tilt><strong>4.5+</strong><span>Years experience</span></div></div>
-          <div class="stat glass" data-scroll-anim="card"><div class="tilt-inner" data-tilt><strong>10+</strong><span>Live projects</span></div></div>
-          <div class="stat glass" data-scroll-anim="card"><div class="tilt-inner" data-tilt><strong>3.43</strong><span>CGPA · Bronze Medal</span></div></div>
+          <div class="stat panel reveal"><strong>4.5+</strong><span>Years experience</span></div>
+          <div class="stat panel reveal"><strong>10+</strong><span>Live projects</span></div>
+          <div class="stat panel reveal"><strong>3.43</strong><span>CGPA · Bronze Medal</span></div>
         </div>
-      </div>
-      <div class="section-fg" data-velocity="1" aria-hidden="true">
-        <span class="orb orb-1"></span>
-        <span class="orb orb-2"></span>
       </div>
     </section>
 
-    <section class="section stack-section" id="skills" data-stack-section>
-      <div class="section-bg" data-velocity="0.2" aria-hidden="true"></div>
-      <div class="container section-mid" data-velocity="0.5">
-        <header class="section-head" data-scroll-anim="fade-up">
+    <section class="section" id="skills">
+      <div class="container">
+        <header class="section-head reveal">
           <p class="eyebrow">Skills</p>
           <h2>Technical proficiencies</h2>
         </header>
@@ -278,22 +184,20 @@
       </div>
     </section>
 
-    <section class="section stack-section" id="projects" data-stack-section>
-      <div class="section-bg" data-velocity="0.2" aria-hidden="true"></div>
-      <div class="container section-mid" data-velocity="0.5">
-        <header class="section-head" data-scroll-anim="fade-up">
+    <section class="section" id="projects">
+      <div class="container">
+        <header class="section-head reveal">
           <p class="eyebrow">Projects</p>
           <h2>Selected work</h2>
-          <p class="lede">Full-stack applications, SaaS platforms, and automation — scroll-bound reveals.</p>
+          <p class="lede">Full-stack applications, SaaS platforms, and automation systems.</p>
         </header>
         <div class="projects-showreel" data-projects></div>
       </div>
     </section>
 
-    <section class="section stack-section" id="experience" data-stack-section>
-      <div class="section-bg" data-velocity="0.2" aria-hidden="true"></div>
-      <div class="container section-mid" data-velocity="0.5">
-        <header class="section-head" data-scroll-anim="fade-up">
+    <section class="section" id="experience">
+      <div class="container">
+        <header class="section-head reveal">
           <p class="eyebrow">Experience</p>
           <h2>Where I’ve shipped</h2>
         </header>
@@ -301,10 +205,9 @@
       </div>
     </section>
 
-    <section class="section stack-section" id="research" data-stack-section>
-      <div class="section-bg" data-velocity="0.2" aria-hidden="true"></div>
-      <div class="container section-mid" data-velocity="0.5">
-        <header class="section-head" data-scroll-anim="fade-up">
+    <section class="section" id="research">
+      <div class="container">
+        <header class="section-head reveal">
           <p class="eyebrow">Research</p>
           <h2>AI · Vision · Responsible Systems</h2>
           <p class="lede">
@@ -316,11 +219,9 @@
       </div>
     </section>
 
-    <section class="section stack-section contact-section" id="contact" data-stack-section>
-      <div class="section-bg" data-velocity="0.2" aria-hidden="true"></div>
-      <div class="container section-mid" data-velocity="0.5">
-        <div class="contact-panel glass" data-scroll-anim="card">
-          <div class="tilt-inner" data-tilt>
+    <section class="section contact-section" id="contact">
+      <div class="container">
+        <div class="contact-panel panel reveal">
           <p class="eyebrow">Contact</p>
           <h2>Let’s build something.</h2>
           <p class="lede">Open to full-time engineering and research roles. Reach out anytime.</p>
@@ -335,7 +236,6 @@
             <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Resume.pdf" download>Job Resume</a>
             <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Research_Resume.pdf" download>Research Resume</a>
           </div>
-          </div>
         </div>
       </div>
     </section>
@@ -347,8 +247,6 @@
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
   <script src="/js/data.js" defer></script>
   <script src="/js/main.js" defer></script>
 </body>
