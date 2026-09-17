@@ -115,8 +115,6 @@
   </script>
 
   <link rel="stylesheet" href="/css/styles.css" />
-  <link rel="preload" as="image" href="/assets/images/layer-bg-nebula.png" fetchpriority="high" />
-  <link rel="preload" as="image" href="/assets/images/profile.png" fetchpriority="high" />
 </head>
 <body>
   <!-- Skip link for accessibility -->
@@ -139,26 +137,36 @@
     </div>
   </header>
 
-  <!-- ═══════════════ Immersive 3D scroll scene ═══════════════ -->
-  <div class="scene-runway" id="hero">
-    <section class="scene-3d" data-scene aria-label="Introduction">
+  <!-- ═══════════════ Hero · multi-layer parallax ═══════════════ -->
+  <!-- Tall runway + sticky viewport = visible depth while scrolling -->
+  <div class="hero-runway" id="hero">
+    <section class="hero" aria-label="Introduction">
+      <!-- Layer 1 · Background mesh @ 0.15x -->
+      <div class="parallax-layer layer-bg" data-speed="0.15" aria-hidden="true">
+        <div class="tech-mesh"></div>
+        <div class="glow glow-a"></div>
+        <div class="glow glow-b"></div>
+      </div>
 
-      <!-- Mobile / reduced-motion: instant static fallback -->
-      <div class="scene-fallback" data-scene-fallback>
-        <img
-          class="fallback-bg"
-          src="/assets/images/layer-bg-nebula.png"
-          alt=""
-          width="1920"
-          height="1080"
-          decoding="async"
-          fetchpriority="high"
-        />
-        <div class="fallback-content">
-          <img class="hero-avatar" src="/assets/images/profile.png" alt="Kamran Fareed" width="96" height="96" />
+      <!-- Layer 2 · Floating tech tags @ 0.35x -->
+      <div class="parallax-layer layer-mid" data-speed="0.35" aria-hidden="true" data-float-tags></div>
+
+      <!-- Layer 3 · Foreground hero @ 1x -->
+      <div class="parallax-layer layer-fg" data-speed="1">
+        <div class="hero-content">
+          <img
+            class="hero-avatar"
+            src="/assets/images/profile.png"
+            alt="Kamran Fareed"
+            width="96"
+            height="96"
+            fetchpriority="high"
+          />
           <p class="hero-kicker">@KamranKhoxa · Associate Team Lead</p>
           <h1 class="hero-name">Kamran</h1>
-          <p class="hero-tagline">Building Full-Stack Solutions &amp; Smart Automation</p>
+          <p class="hero-tagline" aria-live="polite">
+            <span data-typewriter>Building Full-Stack Solutions &amp; Smart Automation</span><span class="cursor" aria-hidden="true">|</span>
+          </p>
           <p class="hero-bio">
             Software engineer with 4.5+ years shipping microservices, SaaS platforms, and automation —
             TypeScript, PHP, Docker &amp; AWS. Based in D.G. Khan, PK.
@@ -166,71 +174,12 @@
           <div class="hero-cta">
             <a class="btn btn-primary" href="#projects">View My Projects</a>
             <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Resume.pdf" download>Job Resume</a>
+            <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Research_Resume.pdf" download>Research Resume</a>
           </div>
         </div>
-      </div>
-
-      <!-- Desktop immersive stage -->
-      <div class="scene-stage" data-scene-stage>
-        <!-- Layer 1 · Celestial background @ 0.3x scroll -->
-        <div class="depth-layer layer-bg" data-layer="bg" aria-hidden="true">
-          <img
-            class="layer-img"
-            src="/assets/images/layer-bg-nebula.png"
-            alt=""
-            width="1920"
-            height="1080"
-            decoding="async"
-          />
-          <div class="nebula-veil"></div>
-          <div class="starfield" data-starfield></div>
-        </div>
-
-        <!-- Layer 2 · Core product asset (scales on scroll) -->
-        <div class="depth-layer layer-mid" data-layer="mid" aria-hidden="true">
-          <div class="mid-stack">
-            <img
-              class="mid-product"
-              src="/assets/images/layer-mid-product.png"
-              alt=""
-              width="800"
-              height="800"
-              decoding="async"
-            />
-            <img
-              class="mid-avatar"
-              src="/assets/images/profile.png"
-              alt=""
-              width="160"
-              height="160"
-              decoding="async"
-            />
-          </div>
-        </div>
-
-        <!-- Layer 3 · Interactive UI · Track 3D tilt (max 10°, perspective 800) -->
-        <div class="depth-layer layer-fg" data-layer="fg">
-          <div class="tilt-stage" data-tilt-stage>
-            <div class="tilt-card glass" data-tilt-card>
-              <p class="hero-kicker">@KamranKhoxa · Associate Team Lead</p>
-              <h1 class="hero-name">Kamran</h1>
-              <p class="hero-tagline" aria-live="polite">
-                <span data-typewriter>Building Full-Stack Solutions &amp; Smart Automation</span><span class="cursor" aria-hidden="true">|</span>
-              </p>
-              <p class="hero-bio">
-                Software engineer with 4.5+ years shipping microservices, SaaS platforms, and automation —
-                TypeScript, PHP, Docker &amp; AWS. Based in D.G. Khan, PK.
-              </p>
-              <div class="hero-cta">
-                <a class="btn btn-primary" href="#projects">View My Projects</a>
-                <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Resume.pdf" download>Job Resume</a>
-                <a class="btn btn-ghost" href="/assets/docs/Kamran_Fareed_Research_Resume.pdf" download>Research Resume</a>
-              </div>
-              <p class="tilt-hint" aria-hidden="true">Track 3D · move cursor</p>
-            </div>
-          </div>
-          <a class="scroll-hint" href="#about" aria-label="Scroll to about"><span></span></a>
-        </div>
+        <a class="scroll-hint" href="#about" aria-label="Scroll to about">
+          <span></span>
+        </a>
       </div>
     </section>
   </div>
@@ -353,9 +302,7 @@
     </div>
   </footer>
 
-  <!-- GSAP + ScrollTrigger (scrub only — no scrolljacking) -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+  <!-- Content config first, then interactions -->
   <script src="/js/data.js" defer></script>
   <script src="/js/main.js" defer></script>
 </body>
