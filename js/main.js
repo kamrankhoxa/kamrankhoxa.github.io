@@ -1,5 +1,5 @@
 /**
- * main.js — Parallax, typewriter, scroll reveals, DOM rendering
+ * main.js — Scroll engine: hero parallax + section track animations
  * Depends on window.PORTFOLIO from data.js
  */
 (function () {
@@ -7,9 +7,7 @@
 
   const data = window.PORTFOLIO || {};
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
 
-  /* ── Helpers ── */
   function $(sel, root) {
     return (root || document).querySelector(sel);
   }
@@ -28,12 +26,16 @@
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
 
-  /* ── Render content from data.js ── */
+  /* ══════════════════════════════════════
+     Content renderers
+     ══════════════════════════════════════ */
   function renderFloatTags() {
     const layer = $("[data-float-tags]");
     if (!layer || !data.floatTags) return;
-
     data.floatTags.forEach(function (tag) {
       const node = el("span", "float-tag", tag.label);
       node.style.left = tag.x + "%";
@@ -46,16 +48,17 @@
   function renderSkills() {
     const grid = $("[data-skills-grid]");
     if (!grid || !data.skills) return;
-
     data.skills.forEach(function (cat) {
-      const card = el("article", "skill-card glass reveal");
+      const card = el("article", "skill-card glass track-item");
       card.innerHTML =
         "<h3>" +
         cat.title +
         "</h3><ul>" +
-        cat.items.map(function (i) {
-          return "<li>" + i + "</li>";
-        }).join("") +
+        cat.items
+          .map(function (i) {
+            return "<li>" + i + "</li>";
+          })
+          .join("") +
         "</ul>";
       grid.appendChild(card);
     });
@@ -64,11 +67,8 @@
   function renderProjects() {
     const wrap = $("[data-projects]");
     if (!wrap || !data.projects) return;
-
-    data.projects.forEach(function (p, i) {
-      const card = el("article", "project-card glass");
-      card.style.transitionDelay = (i % 3) * 0.08 + "s";
-
+    data.projects.forEach(function (p) {
+      const card = el("article", "project-card glass track-item");
       var actions = "";
       if (p.live) {
         actions +=
@@ -82,7 +82,6 @@
           p.code +
           '" target="_blank" rel="noopener noreferrer">Code</a>';
       }
-
       card.innerHTML =
         '<p class="stack">' +
         p.stack +
@@ -100,9 +99,8 @@
   function renderExperience() {
     const wrap = $("[data-experience]");
     if (!wrap || !data.experience) return;
-
     data.experience.forEach(function (job) {
-      const card = el("article", "job-card glass reveal");
+      const card = el("article", "job-card glass track-item");
       card.innerHTML =
         '<div class="job-head"><span class="job-title">' +
         job.role +
@@ -126,154 +124,189 @@
   function renderResearch() {
     const wrap = $("[data-research]");
     if (!wrap || !data.research) return;
-
     data.research.forEach(function (item) {
-      const card = el("article", "research-card glass reveal");
+      const card = el("article", "research-card glass track-item");
       card.innerHTML = "<h3>" + item.title + "</h3><p>" + item.body + "</p>";
       wrap.appendChild(card);
     });
   }
 
-  /* ── Typewriter ── */
+  /* ══════════════════════════════════════
+     Typewriter
+     ══════════════════════════════════════ */
   function initTypewriter() {
     const target = $("[data-typewriter]");
     if (!target) return;
-
     const full = data.typewriterText || target.textContent.trim();
     if (reduceMotion) {
       target.textContent = full;
       return;
     }
-
     target.textContent = "";
     let i = 0;
-    const speed = 38;
-
     function tick() {
       if (i <= full.length) {
         target.textContent = full.slice(0, i);
         i += 1;
-        window.setTimeout(tick, speed);
+        window.setTimeout(tick, 36);
       }
     }
-    window.setTimeout(tick, 400);
+    window.setTimeout(tick, 350);
   }
 
-  /* ── Sticky multi-layer parallax (smooth lerp + translateY) ──
-     Progress 0→1 across .hero-runway. Each layer moves at data-speed:
-     bg 0.15x · mid 0.35x · fg 1x
-  */
+  /* ══════════════════════════════════════
+     Hero parallax — scrollY driven, no sticky dependency
+     bg 0.15x · mid 0.35x · fg 1.0x
+     ══════════════════════════════════════ */
   function initParallax() {
+    const hero = $(".hero");
     const runway = $(".hero-runway");
     const layers = $$(".parallax-layer[data-speed]");
     const floatTags = $$(".float-tag");
-    if (!runway || !layers.length) return;
+    if (!hero || !layers.length) return;
 
-    // Travel distance (px) at full speed (1x) across the runway
-    const TRAVEL = 420;
-    const LERP = 0.12; // lower = silkier
+    let current = { bg: 0, mid: 0, fg: 0 };
+    let target = { bg: 0, mid: 0, fg: 0 };
+    const ease = 0.14;
 
-    let targetProgress = 0;
-    let currentProgress = 0;
-    let rafId = 0;
-    let running = true;
-
-    function readProgress() {
-      if (reduceMotion || isMobile()) return 0;
-      const rect = runway.getBoundingClientRect();
-      const total = Math.max(1, runway.offsetHeight - window.innerHeight);
-      // How far we've scrolled through the runway
-      const scrolled = clamp(-rect.top, 0, total);
-      return scrolled / total;
-    }
-
-    function apply(progress) {
+    function measure() {
       if (reduceMotion || isMobile()) {
-        layers.forEach(function (layer) {
-          layer.style.transform = "translate3d(0, 0, 0)";
-        });
-        floatTags.forEach(function (tag) {
-          tag.style.transform = "translate3d(0, 0, 0)";
-        });
+        target.bg = target.mid = target.fg = 0;
         return;
       }
 
+      // Use raw page scroll while hero is on screen
+      const y = window.scrollY || window.pageYOffset || 0;
+      const heroBottom = runway
+        ? runway.offsetTop + runway.offsetHeight
+        : hero.offsetTop + hero.offsetHeight;
+
+      // Only drive while user is still in/near hero zone
+      const activeY = clamp(y, 0, Math.max(heroBottom, window.innerHeight * 2));
+
+      target.bg = activeY * 0.15;
+      target.mid = activeY * 0.35;
+      target.fg = activeY * 1.0;
+    }
+
+    function paint() {
+      current.bg = lerp(current.bg, target.bg, ease);
+      current.mid = lerp(current.mid, target.mid, ease);
+      current.fg = lerp(current.fg, target.fg, ease);
+
       layers.forEach(function (layer) {
         const speed = parseFloat(layer.dataset.speed || "1");
-        // Negative = rise upward as user scrolls down
-        const y = -(progress * TRAVEL * speed);
-        layer.style.transform = "translate3d(0, " + y.toFixed(2) + "px, 0)";
+        var y = 0;
+        if (speed <= 0.2) y = current.bg;
+        else if (speed <= 0.5) y = current.mid;
+        else y = current.fg;
+
+        // Move opposite to scroll = classic depth (layer lags / rises)
+        layer.style.transform = "translate3d(0, " + (-y).toFixed(2) + "px, 0)";
       });
 
-      // Per-tag depth multiplier on top of mid layer
       floatTags.forEach(function (tag) {
         const depth = parseFloat(tag.dataset.depth || "1");
-        const y = -(progress * TRAVEL * 0.35 * (depth - 1) * 0.85);
-        tag.style.transform = "translate3d(0, " + y.toFixed(2) + "px, 0)";
+        const extra = current.mid * (depth - 1) * 0.45;
+        tag.style.transform = "translate3d(0, " + (-extra).toFixed(2) + "px, 0)";
       });
     }
 
-    function tick() {
-      targetProgress = readProgress();
-      currentProgress = lerp(currentProgress, targetProgress, reduceMotion ? 1 : LERP);
-
-      // Snap when close enough to save work
-      if (Math.abs(targetProgress - currentProgress) < 0.0008) {
-        currentProgress = targetProgress;
-      }
-
-      apply(currentProgress);
-
-      if (running) rafId = window.requestAnimationFrame(tick);
+    function frame() {
+      measure();
+      paint();
+      window.requestAnimationFrame(frame);
     }
 
-    function onResize() {
-      targetProgress = readProgress();
-      if (isMobile() || reduceMotion) {
-        currentProgress = targetProgress;
-        apply(0);
-      }
-    }
-
-    window.addEventListener("resize", onResize, { passive: true });
-    document.addEventListener("visibilitychange", function () {
-      running = !document.hidden;
-      if (running) rafId = window.requestAnimationFrame(tick);
-    });
-
-    rafId = window.requestAnimationFrame(tick);
+    window.addEventListener(
+      "scroll",
+      function () {
+        measure();
+      },
+      { passive: true }
+    );
+    window.addEventListener("resize", measure, { passive: true });
+    measure();
+    window.requestAnimationFrame(frame);
   }
 
-  /* ── Scroll-triggered reveals (IntersectionObserver) ── */
-  function initReveals() {
-    const items = $$(".reveal, .project-card");
-    if (!items.length) return;
+  /* ══════════════════════════════════════
+     Section scroll-track — top → bottom
+     Progress 0→1 as each section crosses the viewport
+     ══════════════════════════════════════ */
+  function sectionProgress(section) {
+    const rect = section.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    // Start when top hits bottom of viewport; end when top hits ~20% from top
+    const start = vh * 0.92;
+    const end = vh * 0.18;
+    const raw = (start - rect.top) / (start - end);
+    return clamp(raw, 0, 1);
+  }
 
-    if (reduceMotion || !("IntersectionObserver" in window)) {
-      items.forEach(function (n) {
-        n.classList.add("is-visible");
+  function initScrollTracks() {
+    const sections = $$("[data-scroll-track]");
+    if (!sections.length) return;
+
+    // Stagger children
+    sections.forEach(function (section) {
+      const items = $$(".track-item", section);
+      items.forEach(function (item, i) {
+        item.style.setProperty("--i", String(i));
+      });
+    });
+
+    if (reduceMotion) {
+      sections.forEach(function (section) {
+        section.style.setProperty("--scroll-progress", "1");
+        section.classList.add("is-inview");
+        $$(".track-item", section).forEach(function (item) {
+          item.style.setProperty("--item-progress", "1");
+        });
       });
       return;
     }
 
-    const io = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
-    );
+    let ticking = false;
 
-    items.forEach(function (n) {
-      io.observe(n);
-    });
+    function update() {
+      ticking = false;
+      const vh = window.innerHeight || 1;
+
+      sections.forEach(function (section) {
+        const p = sectionProgress(section);
+        section.style.setProperty("--scroll-progress", p.toFixed(4));
+        section.classList.toggle("is-inview", p > 0.02);
+
+        // Children animate top→bottom with staggered progress
+        const items = $$(".track-item", section);
+        items.forEach(function (item, i) {
+          const delay = Math.min(0.55, i * 0.07);
+          const ip = clamp((p - delay) / Math.max(0.001, 1 - delay), 0, 1);
+          item.style.setProperty("--item-progress", ip.toFixed(4));
+        });
+
+        // Optional: parallax nudge on section background accent
+        const shift = (1 - p) * 40;
+        section.style.setProperty("--track-shift", shift.toFixed(2) + "px");
+      });
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    update();
   }
 
-  /* ── Nav ── */
+  /* ══════════════════════════════════════
+     Nav
+     ══════════════════════════════════════ */
   function initNav() {
     const nav = $("#site-nav");
     const toggle = $("[data-nav-toggle]");
@@ -293,7 +326,6 @@
         toggle.setAttribute("aria-expanded", String(!open));
         links.classList.toggle("is-open", !open);
       });
-
       $$("a", links).forEach(function (a) {
         a.addEventListener("click", function () {
           toggle.setAttribute("aria-expanded", "false");
@@ -303,13 +335,11 @@
     }
   }
 
-  /* ── Year ── */
   function setYear() {
     const node = $("[data-year]");
     if (node) node.textContent = String(new Date().getFullYear());
   }
 
-  /* ── Boot ── */
   function init() {
     renderFloatTags();
     renderSkills();
@@ -318,7 +348,7 @@
     renderResearch();
     initTypewriter();
     initParallax();
-    initReveals();
+    initScrollTracks();
     initNav();
     setYear();
   }
